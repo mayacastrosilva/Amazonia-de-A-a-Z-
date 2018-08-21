@@ -1,0 +1,17 @@
+{
+    "name": "data-entry/portalamazonia",
+    "authors": [
+        {
+            "name": "Charles",
+            "email": "charles.santarosa@portalamazonia.com"
+        }
+    ],
+    "require": {
+        "slim/pdo": "^1.10"
+    },
+    "autoload": {
+        "psr-4": {
+            "Eva\\": "./vendor/eva/src"
+        }
+    }
+}

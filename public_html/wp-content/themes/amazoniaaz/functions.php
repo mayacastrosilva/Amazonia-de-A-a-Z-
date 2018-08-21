@@ -1,0 +1,97 @@
+<?php
+/**
+ * Created by PhpStorm.
+ * User: Charles
+ * Date: 27/12/2017
+ * Time: 10:51
+ */
+
+use Eva\Core\Configure\Config;
+use Eva\Core\Utility\Request;
+use Eva\Rest\HttpClientRest;
+
+//Id da pagina de busca por letra
+define('PAGE_ID_LETRA', 7);
+
+//Id da pagina de busca por tags
+define('PAGE_ID_TAGS', 26);
+
+//Rss
+define('URL_RSS', 'http://portalamazonia.com/rss');
+
+//Actions que devem ser incluidas na "functions" do thema atual ------------
+add_action('init', 'add_route_tag');
+add_action('save_post', 'save_post_api', 10, 2 );
+add_filter('manage_posts_columns', 'show_column_head');
+add_action('manage_posts_custom_column', 'show_column_id', 10, 2);
+add_action('add_meta_boxes', 'add_metabox_pesquisa_alfabetica');
+add_action('add_meta_boxes', 'add_metabox_post_metabox_api');
+add_action('add_meta_boxes', 'add_metabox_link_public');
+add_action('created_term', 'save_term', 10, 3);
+add_action('edited_terms', 'edited_term_api', 10, 3);
+add_action('category_edit_form_fields', 'category_edit_term_api');
+add_action('edit_tag_form', 'edit_tag_form');
+add_action('edit_term_taxonomy', 'edit_term_taxonomy_api');
+add_action('delete_term', 'delete_term_api', 10, 3);
+add_action('admin_bar_menu', 'alterar_admin_bar', 99);
+add_theme_support('post-thumbnails');
+//-----------------------------------------------------------------
+
+function get_title_site()
+{
+    if(is_home())
+    {
+        bloginfo('name'); echo ' - '; bloginfo('description');
+    } else {
+        wp_title(''); echo ' - '; bloginfo('name');
+    }
+}
+
+function get_post_single_api($_id)
+{
+    $rest = (new HttpClientRest(new Config('api.hyperion.' . ENVIRONMENT)))
+        ->get()
+        ->service("/sumauma/posts/{$_id}")
+        ->execute();
+
+    if($rest->statusCode == 200)
+    {
+        return json_decode($rest->response);
+    } else {
+        return false;
+    }
+}
+
+/** Rotas /tag e letra */
+function add_route_tag($rules)
+{
+
+    //Page Tags
+    add_rewrite_rule('^tags/([^/]*)/?', 'index.php?page_id='.PAGE_ID_TAGS.'&tag_slug=$matches[1]', 'top');
+    add_rewrite_tag('%tag_slug%', '([^/]*)');
+
+    //Page Letra
+    add_rewrite_rule('^letra/([^/]*)/?', 'index.php?page_id='.PAGE_ID_LETRA.'&letra=$matches[1]', 'top');
+    add_rewrite_tag('%letra%', '([^/]*)');
+
+    global $wp_rewrite;
+    $wp_rewrite->flush_rules(false);
+}
+
+function get_post_related_api($query)
+{
+    $rest = (new HttpClientRest(new Config('api.hyperion.' . ENVIRONMENT)))
+        ->get()
+        ->service($query)
+        ->execute();
+
+    if($rest->statusCode == 200)
+    {
+        return json_decode($rest->response);
+    } else {
+        return false;
+    }
+}
+
+
+
